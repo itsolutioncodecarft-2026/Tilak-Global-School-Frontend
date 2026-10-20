@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://api.tilakglobalschool.in/api/$1"
+      "destination": "https://tilak-global-school-backend.onrender.com/api/$1"
     }
   ],
   "headers": [

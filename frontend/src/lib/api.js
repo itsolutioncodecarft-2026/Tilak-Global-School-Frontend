@@ -1,19 +1,21 @@
 /**
  * Public site API client — Tilak Global School
  *
- * Base URL strategy:
- *   Development → NEXT_PUBLIC_API_URL = http://localhost:5000/api  (direct)
- *   Production  → NEXT_PUBLIC_API_URL = /api  (Vercel rewrite → Railway)
+ * URL strategy (no NEXT_PUBLIC_ needed):
+ *   Server-side → process.env.API_URL (full Render URL, private)
+ *   Client-side → '/api' (relative, Vercel rewrite proxies to Render)
  *
  * All functions return { data, error } — never throw.
- * Form submissions include credentials: 'include' for cookie compatibility.
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+import { getApiBase } from './apiUrl';
 
 async function apiFetch(path, options = {}) {
+  // getApiBase() called at runtime — correct URL for server OR browser
+  const url = `${getApiBase()}${path}`;
+
   try {
-    const res = await fetch(`${BASE}${path}`, {
+    const res = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -34,8 +36,8 @@ async function apiFetch(path, options = {}) {
     }
 
     return { data: json.data ?? json, error: null };
+
   } catch (err) {
-    // Network error / no connection
     return {
       data:  null,
       error: { message: err.message || 'Network error — could not reach server', status: 0 },
@@ -50,12 +52,12 @@ export function getSettings() {
   return apiFetch('/settings');
 }
 
-/** CMS content blocks for a given page (e.g. 'home', 'about') */
+/** CMS content blocks for a given page e.g. 'home', 'about' */
 export function getContent(page) {
   return apiFetch(`/content/${page}`);
 }
 
-/** Published news/events list. Pass query string for filters e.g. '?category=News' */
+/** Published news/events list. Optional query string e.g. '?category=News' */
 export function getNews(query = '') {
   return apiFetch(`/news${query}`);
 }
@@ -65,7 +67,7 @@ export function getNewsBySlug(slug) {
   return apiFetch(`/news/${slug}`);
 }
 
-/** Published gallery images. Pass query string e.g. '?category=Sports' */
+/** Published gallery images. Optional query string e.g. '?category=Sports' */
 export function getGallery(query = '') {
   return apiFetch(`/gallery${query}`);
 }
@@ -85,10 +87,7 @@ export function getFaqs() {
   return apiFetch('/faqs');
 }
 
-/**
- * Submit admission enquiry or application form.
- * Rate-limited on backend — credentials included for cookie compat.
- */
+/** Submit admission enquiry / application form (rate-limited on backend) */
 export function submitApplication(data) {
   return apiFetch('/applications', {
     method:      'POST',
@@ -97,10 +96,7 @@ export function submitApplication(data) {
   });
 }
 
-/**
- * Submit contact form enquiry.
- * Rate-limited on backend.
- */
+/** Submit contact form enquiry (rate-limited on backend) */
 export function submitContact(data) {
   return apiFetch('/contact', {
     method:      'POST',

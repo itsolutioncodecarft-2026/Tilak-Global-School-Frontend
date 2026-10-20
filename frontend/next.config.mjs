@@ -1,79 +1,37 @@
 /** @type {import('next').NextConfig} */
 
-const isProd = process.env.NODE_ENV === 'production';
-
-// Production API lives at api.tilakglobalschool.in
-// Development API is on localhost:5000
-const API_ORIGIN = isProd
-  ? 'https://api.tilakglobalschool.in'
-  : 'http://localhost:5000';
+// NOTE: API rewrites are handled by vercel.json in production.
+// next.config.mjs rewrites would duplicate them and may conflict.
+// Dev rewrites are NOT needed because api.js uses the full API_URL
+// server-side and '/api' client-side (Vercel rewrite handles prod).
 
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
 
-  // ── API rewrites ────────────────────────────────────────────────────────────
-  // All /api/* requests are proxied to the backend.
-  // → Dev:  /api/health  →  http://localhost:5000/api/health
-  // → Prod: /api/health  →  https://api.tilakglobalschool.in/api/health
-  //
-  // This keeps cookies same-origin (no CORS) and avoids exposing the API URL.
-  async rewrites() {
-    return [
-      {
-        source:      '/api/:path*',
-        destination: `${API_ORIGIN}/api/:path*`,
-      },
-    ];
-  },
-
-  // ── Images ──────────────────────────────────────────────────────────────────
   images: {
     remotePatterns: [
-      // Unsplash placeholder images (dev + prod)
+      // Render backend — uploaded images (production)
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: 'tilak-global-school-backend.onrender.com',
+        pathname: '/uploads/**',
       },
-      // Uploaded files — dev (localhost)
+      // localhost — uploaded images (development)
       {
         protocol: 'http',
         hostname: 'localhost',
         port:     '5000',
         pathname: '/uploads/**',
       },
-      // Uploaded files — production Railway backend domain
+      // Unsplash placeholder images used in static data files
       {
         protocol: 'https',
-        hostname: 'api.tilakglobalschool.in',
-        pathname: '/uploads/**',
-      },
-      // Uploaded files — Railway auto-generated domain (fallback)
-      {
-        protocol: 'https',
-        hostname: '*.railway.app',
-        pathname: '/uploads/**',
+        hostname: 'images.unsplash.com',
       },
     ],
     dangerouslyAllowSVG:    true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy:  "default-src 'self'; script-src 'none'; sandbox;",
-  },
-
-  // ── Webpack dev watcher (Windows HMR fix) ──────────────────────────────────
-  webpack: (config, { dev }) => {
-    if (dev) {
-      config.watchOptions = {
-        poll:             1000,
-        aggregateTimeout: 300,
-        ignored:          ['**/node_modules/**', '**/.next/**', '**/.git/**'],
-      };
-    }
-    return config;
-  },
-
-  onDemandEntries: {
-    maxInactiveAge:    60 * 60 * 1000,
-    pagesBufferLength: 5,
   },
 };
 
