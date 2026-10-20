@@ -1,33 +1,59 @@
 ﻿/**
  * Admin API client — Tilak Global School
  *
- * URL strategy (no NEXT_PUBLIC_ needed):
- *   Server-side → process.env.API_URL (full Render URL, private)
- *   Client-side → '/api' (relative, Vercel rewrite proxies to Render)
+ * URL strategy (no NEXT_PUBLIC_ prefix):
+ *   Server-side → process.env.API_URL (private, full backend URL)
+ *   Client-side → '/api' (relative, Vercel rewrite → backend)
  *
- * All admin requests include credentials: 'include' for JWT httpOnly cookies.
- * On 401, the caller (AuthContext) redirects to /login.
+ * All requests include credentials: 'include' for JWT httpOnly cookies.
+ * Includes retry for Render free-tier cold starts (502/503).
  */
 
 import { getApiBase } from './apiUrl';
 
-async function http(method, path, body, options = {}) {
-  // getApiBase() called at runtime — correct URL for server OR browser
-  const url = `${getApiBase()}${path}`;
+// ── Fetch with retry (handles Render cold-start 502/503) ─────────────────────
+async function fetchWithRetry(url, options = {}, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 30000);
 
+      const res = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        signal:      controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if ((res.status === 502 || res.status === 503) && i < retries) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      if (i < retries) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+async function http(method, path, body, options = {}) {
+  const url        = `${getApiBase()}${path}`;
   const isFormData = body instanceof FormData;
 
   const headers = isFormData
-    ? {}   // Let browser set multipart Content-Type + boundary automatically
+    ? {}
     : { 'Content-Type': 'application/json' };
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method,
-    credentials: 'include',   // Always send httpOnly JWT cookie
     headers,
-    body: body
-      ? (isFormData ? body : JSON.stringify(body))
-      : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
     ...options,
   });
 

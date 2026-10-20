@@ -1,29 +1,46 @@
 /** @type {import('next').NextConfig} */
 
-// NOTE: API rewrites are handled by vercel.json in production.
-// next.config.mjs rewrites would duplicate them and may conflict.
-// Dev rewrites are NOT needed because api.js uses the full API_URL
-// server-side and '/api' client-side (Vercel rewrite handles prod).
+// Rewrites are in vercel.json for production.
+// In development, next.config.mjs rewrites handle /api/* → localhost:5000.
+const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
 
+  // Dev-only rewrites so `npm run dev` works without Vercel CLI
+  ...(isDev && {
+    async rewrites() {
+      return [
+        {
+          source:      '/api/:path*',
+          destination: 'http://localhost:5000/api/:path*',
+        },
+      ];
+    },
+  }),
+
   images: {
     remotePatterns: [
-      // Render backend — uploaded images (production)
+      // Production backend (Render + custom domain)
+      {
+        protocol: 'https',
+        hostname: 'api.tilakglobalschool.com',
+        pathname: '/uploads/**',
+      },
+      // Render auto-domain (before custom domain is set)
       {
         protocol: 'https',
         hostname: 'tilak-global-school-backend.onrender.com',
         pathname: '/uploads/**',
       },
-      // localhost — uploaded images (development)
+      // Development
       {
         protocol: 'http',
         hostname: 'localhost',
         port:     '5000',
         pathname: '/uploads/**',
       },
-      // Unsplash placeholder images used in static data files
+      // Unsplash placeholder images
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',

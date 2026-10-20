@@ -1,21 +1,53 @@
 /**
  * Public site API client — Tilak Global School
  *
- * URL strategy (no NEXT_PUBLIC_ needed):
- *   Server-side → process.env.API_URL (full Render URL, private)
- *   Client-side → '/api' (relative, Vercel rewrite proxies to Render)
+ * URL strategy (no NEXT_PUBLIC_ prefix):
+ *   Server-side → process.env.API_URL (private, full Render URL)
+ *   Client-side → '/api' (relative, Vercel rewrite → backend)
  *
  * All functions return { data, error } — never throw.
+ * Includes retry logic for Render free-tier cold starts (502/503).
  */
 
 import { getApiBase } from './apiUrl';
 
+// ── Fetch with retry (handles Render cold-start 502/503) ─────────────────────
+async function fetchWithRetry(url, options = {}, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      const res = await fetch(url, {
+        ...options,
+        credentials: 'include',
+        signal:      controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      // Retry on gateway errors (Render cold-start or crash)
+      if ((res.status === 502 || res.status === 503) && i < retries) {
+        await new Promise(r => setTimeout(r, 5000)); // wait 5s before retry
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      if (i < retries) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 async function apiFetch(path, options = {}) {
-  // getApiBase() called at runtime — correct URL for server OR browser
   const url = `${getApiBase()}${path}`;
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -40,7 +72,12 @@ async function apiFetch(path, options = {}) {
   } catch (err) {
     return {
       data:  null,
-      error: { message: err.message || 'Network error — could not reach server', status: 0 },
+      error: {
+        message: err.name === 'AbortError'
+          ? 'Request timed out — backend may be starting up, please try again'
+          : (err.message || 'Network error'),
+        status: 0,
+      },
     };
   }
 }
@@ -87,21 +124,19 @@ export function getFaqs() {
   return apiFetch('/faqs');
 }
 
-/** Submit admission enquiry / application form (rate-limited on backend) */
+/** Submit admission enquiry / application (rate-limited on backend) */
 export function submitApplication(data) {
   return apiFetch('/applications', {
-    method:      'POST',
-    credentials: 'include',
-    body:        JSON.stringify(data),
+    method: 'POST',
+    body:   JSON.stringify(data),
   });
 }
 
-/** Submit contact form enquiry (rate-limited on backend) */
+/** Submit contact form (rate-limited on backend) */
 export function submitContact(data) {
   return apiFetch('/contact', {
-    method:      'POST',
-    credentials: 'include',
-    body:        JSON.stringify(data),
+    method: 'POST',
+    body:   JSON.stringify(data),
   });
 }
 

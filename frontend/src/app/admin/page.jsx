@@ -1,8 +1,7 @@
-// This route is intentionally disabled on the public website.
-// The admin panel runs at admin-portal.tilakglobalschool.in (prod)
-// or http://localhost:3001 (dev).
+// Admin panel is at admin-portal.tilakglobalschool.com — NOT on the public site.
+// This route intentionally returns 404 to prevent any access via public domain.
 import { notFound } from 'next/navigation';
 
-export default function AdminBlockedPage() {
-  notFound(); // Always returns 404 — no admin access via public domain
+export default function AdminRoute() {
+  notFound();
 }

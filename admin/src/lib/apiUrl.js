@@ -2,18 +2,16 @@
  * Returns the correct API base URL depending on execution context.
  *
  * Server-side (Server Components, generateMetadata, Route Handlers):
- *   → Uses process.env.API_URL — full backend URL, never sent to browser.
- *   → Set API_URL in Vercel Project Settings (no NEXT_PUBLIC_ prefix).
+ *   → process.env.API_URL — full production URL, never exposed to browser.
+ *   → Set API_URL=https://api.tilakglobalschool.com/api in Vercel dashboard.
  *
  * Client-side ("use client" components, browser):
- *   → Uses relative '/api' — Vercel rewrites proxy this to the backend.
- *   → No env variable needed in the browser at all.
+ *   → '/api' — relative URL, Vercel rewrite proxies to backend.
+ *   → No environment variable needed in browser bundle.
  */
 export function getApiBase() {
   if (typeof window !== 'undefined') {
-    // Browser → relative URL → Vercel rewrite → Render backend
     return '/api';
   }
-  // Server → direct full URL (stays private, never in JS bundle)
-  return process.env.API_URL || 'http://localhost:5000/api';
+  return process.env.API_URL || 'https://api.tilakglobalschool.com/api';
 }
