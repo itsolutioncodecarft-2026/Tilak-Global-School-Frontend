@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c8e8ff"/>
+      <stop offset="100%" stop-color="#e8f6ff"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8d5a2"/>
+      <stop offset="100%" stop-color="#7bb87a"/>
+    </linearGradient>
+    <linearGradient id="building" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8d4f0"/>
+      <stop offset="100%" stop-color="#8fb8e8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="1200" height="600" fill="url(#sky)"/>
+
+  <!-- Sun -->
+  <circle cx="980" cy="90" r="55" fill="#FFE066" opacity="0.7"/>
+  <circle cx="980" cy="90" r="42" fill="#FFD700" opacity="0.5"/>
+
+  <!-- Clouds -->
+  <ellipse cx="820" cy="70" rx="70" ry="28" fill="white" opacity="0.8"/>
+  <ellipse cx="870" cy="60" rx="55" ry="24" fill="white" opacity="0.9"/>
+  <ellipse cx="760" cy="78" rx="45" ry="20" fill="white" opacity="0.7"/>
+  <ellipse cx="1080" cy="110" rx="55" ry="22" fill="white" opacity="0.6"/>
+  <ellipse cx="1120" cy="102" rx="42" ry="18" fill="white" opacity="0.7"/>
+
+  <!-- Ground -->
+  <rect x="0" y="480" width="1200" height="120" fill="url(#ground)"/>
+  <!-- Ground highlight -->
+  <rect x="0" y="480" width="1200" height="8" fill="#c8e8a0" opacity="0.6"/>
+
+  <!-- Main school building (right side, large) -->
+  <rect x="580" y="160" width="420" height="320" rx="6" fill="url(#building)"/>
+  <!-- Roof -->
+  <rect x="560" y="140" width="460" height="30" rx="4" fill="#0B3D91" opacity="0.5"/>
+  <!-- Building top accent -->
+  <rect x="620" y="110" width="340" height="40" rx="4" fill="#0B3D91" opacity="0.35"/>
+  <!-- Flag pole -->
+  <rect x="786" y="60" width="6" height="60" fill="#8B7355"/>
+  <polygon points="792,62 832,74 792,86" fill="#C8102E"/>
+
+  <!-- Windows row 1 -->
+  <rect x="610" y="185" width="52" height="44" rx="5" fill="white" opacity="0.75"/>
+  <rect x="678" y="185" width="52" height="44" rx="5" fill="white" opacity="0.75"/>
+  <rect x="746" y="185" width="52" height="44" rx="5" fill="white" opacity="0.75"/>
+  <rect x="814" y="185" width="52" height="44" rx="5" fill="white" opacity="0.75"/>
+  <rect x="882" y="185" width="52" height="44" rx="5" fill="white" opacity="0.75"/>
+  <rect x="950" y="185" width="32" height="44" rx="5" fill="white" opacity="0.75"/>
+  <!-- Windows row 2 -->
+  <rect x="610" y="250" width="52" height="44" rx="5" fill="white" opacity="0.7"/>
+  <rect x="678" y="250" width="52" height="44" rx="5" fill="white" opacity="0.7"/>
+  <rect x="746" y="250" width="52" height="44" rx="5" fill="white" opacity="0.7"/>
+  <rect x="814" y="250" width="52" height="44" rx="5" fill="white" opacity="0.7"/>
+  <rect x="882" y="250" width="52" height="44" rx="5" fill="white" opacity="0.7"/>
+  <rect x="950" y="250" width="32" height="44" rx="5" fill="white" opacity="0.7"/>
+  <!-- Windows row 3 -->
+  <rect x="610" y="315" width="52" height="44" rx="5" fill="white" opacity="0.65"/>
+  <rect x="678" y="315" width="52" height="44" rx="5" fill="white" opacity="0.65"/>
+  <rect x="746" y="315" width="52" height="44" rx="5" fill="white" opacity="0.65"/>
+  <rect x="814" y="315" width="52" height="44" rx="5" fill="white" opacity="0.65"/>
+  <rect x="882" y="315" width="52" height="44" rx="5" fill="white" opacity="0.65"/>
+
+  <!-- Main door -->
+  <rect x="755" y="390" width="70" height="90" rx="8" fill="#0B3D91" opacity="0.6"/>
+  <rect x="768" y="400" width="20" height="50" rx="4" fill="white" opacity="0.4"/>
+  <rect x="797" y="400" width="20" height="50" rx="4" fill="white" opacity="0.4"/>
+
+  <!-- Side wing left -->
+  <rect x="460" y="240" width="130" height="240" rx="4" fill="#a8c8e8"/>
+  <rect x="475" y="260" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+  <rect x="525" y="260" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+  <rect x="475" y="308" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+  <rect x="525" y="308" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+  <rect x="475" y="356" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+  <rect x="525" y="356" width="38" height="34" rx="4" fill="white" opacity="0.6"/>
+
+  <!-- Trees -->
+  <rect x="430" y="395" width="14" height="85" rx="4" fill="#6B4F2A"/>
+  <ellipse cx="437" cy="370" rx="42" ry="54" fill="#2d7a2d" opacity="0.85"/>
+  <ellipse cx="437" cy="355" rx="30" ry="38" fill="#3a8f3a" opacity="0.7"/>
+
+  <rect x="545" y="415" width="12" height="65" rx="3" fill="#6B4F2A"/>
+  <ellipse cx="551" cy="393" rx="34" ry="44" fill="#2d7a2d" opacity="0.8"/>
+
+  <rect x="1080" y="405" width="12" height="75" rx="3" fill="#6B4F2A"/>
+  <ellipse cx="1086" cy="380" rx="36" ry="48" fill="#2d7a2d" opacity="0.8"/>
+  <ellipse cx="1086" cy="365" rx="25" ry="33" fill="#3a8f3a" opacity="0.65"/>
+
+  <!-- Students (foreground, right-center) -->
+  <!-- Student 1 — uniform navy+white -->
+  <circle cx="700" cy="415" r="24" fill="#FDDBB4"/>
+  <rect x="678" y="438" width="44" height="55" rx="8" fill="#0B3D91"/>
+  <rect x="678" y="438" width="44" height="16" rx="6" fill="#1a56c4"/>
+  <!-- bag -->
+  <rect x="722" y="444" width="14" height="32" rx="5" fill="#0d2f6e"/>
+  <!-- legs -->
+  <rect x="684" y="490" width="12" height="28" rx="4" fill="#1F2A44"/>
+  <rect x="702" y="490" width="12" height="28" rx="4" fill="#1F2A44"/>
+
+  <!-- Student 2 — uniform red+white -->
+  <circle cx="775" cy="408" r="26" fill="#c8956c"/>
+  <rect x="752" y="432" width="46" height="56" rx="8" fill="#C8102E"/>
+  <rect x="752" y="432" width="46" height="16" rx="6" fill="#e8304a"/>
+  <!-- book -->
+  <rect x="798" y="452" width="22" height="16" rx="3" fill="white" opacity="0.9"/>
+  <rect x="800" y="454" width="10" height="12" rx="1" fill="#0B3D91" opacity="0.5"/>
+  <!-- legs -->
+  <rect x="758" y="485" width="12" height="30" rx="4" fill="#1F2A44"/>
+  <rect x="776" y="485" width="12" height="30" rx="4" fill="#1F2A44"/>
+
+  <!-- Student 3 — smaller, background -->
+  <circle cx="850" cy="422" r="20" fill="#FDDBB4"/>
+  <rect x="832" y="441" width="38" height="48" rx="7" fill="#1557b0"/>
+  <rect x="832" y="441" width="38" height="14" rx="5" fill="#2a6dd9"/>
+  <rect x="858" y="448" width="12" height="28" rx="4" fill="#0d2f6e"/>
+  <rect x="838" y="487" width="10" height="24" rx="3" fill="#1F2A44"/>
+  <rect x="853" y="487" width="10" height="24" rx="3" fill="#1F2A44"/>
+
+  <!-- Path/walkway -->
+  <ellipse cx="760" cy="510" rx="160" ry="18" fill="#d4c5a0" opacity="0.5"/>
+  <rect x="630" y="495" width="260" height="20" rx="6" fill="#c8b890" opacity="0.4"/>
+
+  <!-- Flower bed -->
+  <ellipse cx="530" cy="488" rx="55" ry="10" fill="#4a9a4a" opacity="0.6"/>
+  <circle cx="510" cy="483" r="5" fill="#FF6B6B" opacity="0.8"/>
+  <circle cx="525" cy="480" r="4" fill="#FFD700" opacity="0.9"/>
+  <circle cx="540" cy="484" r="5" fill="#FF6B6B" opacity="0.8"/>
+  <circle cx="555" cy="481" r="4" fill="#FFB3C6" opacity="0.9"/>
+  <circle cx="570" cy="485" r="4" fill="#FFD700" opacity="0.8"/>
+</svg>

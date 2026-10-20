@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C8E6FF"/>
+      <stop offset="100%" stop-color="#E8F4FD"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0B3D91"/>
+      <stop offset="100%" stop-color="#1557b0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bg)" rx="20"/>
+
+  <!-- Ground strip -->
+  <rect x="0" y="470" width="800" height="130" fill="#d0e8f8" rx="0"/>
+
+  <!-- Building silhouette -->
+  <rect x="80" y="200" width="260" height="270" rx="8" fill="#b8d4f0"/>
+  <rect x="100" y="180" width="220" height="30" rx="4" fill="#0B3D91" opacity=".4"/>
+  <!-- Windows -->
+  <rect x="110" y="220" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="165" y="220" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="220" y="220" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="275" y="220" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="110" y="275" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="165" y="275" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="220" y="275" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <rect x="275" y="275" width="40" height="35" rx="4" fill="white" opacity=".7"/>
+  <!-- Door -->
+  <rect x="175" y="390" width="70" height="80" rx="6" fill="url(#gg)"/>
+
+  <!-- Tree left -->
+  <rect x="50" y="380" width="12" height="90" rx="4" fill="#8B6914"/>
+  <ellipse cx="56" cy="360" rx="35" ry="45" fill="#2d7d2d" opacity=".8"/>
+
+  <!-- Tree right -->
+  <rect x="395" y="390" width="12" height="80" rx="4" fill="#8B6914"/>
+  <ellipse cx="401" cy="370" rx="30" ry="40" fill="#2d7d2d" opacity=".8"/>
+
+  <!-- Student figures (simplified) -->
+  <!-- Student 1 -->
+  <circle cx="480" cy="330" r="28" fill="#FDDBB4"/>
+  <rect x="456" y="358" width="48" height="70" rx="10" fill="#C8102E"/>
+  <rect x="456" y="358" width="48" height="20" rx="6" fill="#0B3D91"/>
+  <!-- backpack -->
+  <rect x="504" y="365" width="16" height="40" rx="6" fill="#1557b0"/>
+
+  <!-- Student 2 -->
+  <circle cx="580" cy="320" r="28" fill="#c8956c"/>
+  <rect x="556" y="348" width="48" height="70" rx="10" fill="#0B3D91"/>
+  <rect x="556" y="348" width="48" height="20" rx="6" fill="#C8102E"/>
+  <!-- book in hand -->
+  <rect x="604" y="370" width="24" height="18" rx="3" fill="white" opacity=".9"/>
+
+  <!-- Student 3 -->
+  <circle cx="670" cy="335" r="24" fill="#FDDBB4"/>
+  <rect x="650" y="359" width="40" height="60" rx="8" fill="#1557b0"/>
+
+  <!-- Flag / pole -->
+  <rect x="700" y="140" width="5" height="130" fill="#8B6914"/>
+  <polygon points="705,140 740,155 705,170" fill="#C8102E"/>
+
+  <!-- Sun -->
+  <circle cx="720" cy="80" r="38" fill="#FFF176" opacity=".6"/>
+
+  <!-- Caption -->
+  <text x="400" y="545" font-family="Arial, sans-serif" font-size="14" fill="#0B3D91" opacity=".55" text-anchor="middle" font-weight="bold">Tilak Global School — Hero Image Placeholder</text>
+  <text x="400" y="565" font-family="Arial, sans-serif" font-size="11" fill="#5B6785" opacity=".7" text-anchor="middle">Replace with actual school photograph</text>
+</svg>
