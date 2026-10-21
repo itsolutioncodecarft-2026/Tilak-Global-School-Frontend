@@ -5,17 +5,17 @@
 
 export const galleryPage = {
   heading: "Gallery",
-  subtext: "[Gallery overview — content coming soon]",
+  subtext: "Explore photos and videos from school events, activities and campus life.",
 };
 
 export const photoGalleryPage = {
   heading: "Photo Gallery",
-  subtext: "[Photo gallery grid — coming soon]",
+  subtext: "A collection of photographs from school events, activities and everyday learning.",
 };
 
 export const videoGalleryPage = {
   heading: "Video Gallery",
-  subtext: "[Video gallery — coming soon]",
+  subtext: "Watch videos from school events, performances and activities.",
 };
 
 // ── Homepage gallery preview ───────────────────────────────────────────────────

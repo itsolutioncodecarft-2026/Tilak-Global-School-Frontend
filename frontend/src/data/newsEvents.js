@@ -5,13 +5,13 @@
 
 export const newsEventsPage = {
   heading: "News & Events",
-  subtext: "[News and Events listing — coming soon]",
+  subtext: "Stay updated with the latest news, notices and events from Tilak Global School.",
 };
 
 // ── Homepage section ──────────────────────────────────────────────────────────
 export const newsEvents = {
   heading: "News & Events",
-  note:    "Sample layout – dates shown are illustrative",
+  note:    "Dates shown are indicative and subject to change — please confirm with the school.",
   viewAll: {
     label: "View All News & Events",
     href:  "/news-events",
