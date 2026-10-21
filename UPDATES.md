@@ -1,6 +1,6 @@
 # Tilak Global School — Session Updates Log
 
-> **Date:** October 2026  
+> **Last Updated:** October 2026  
 > **Developer:** Dishant Saini — Code Craft IT Solution  
 > **Repos:**
 > - Frontend + Admin: `Tilak-Global-School-Frontend` (GitHub)
@@ -8,35 +8,30 @@
 
 ---
 
-## Overview
+## Overview — Is Session Mein Kya Kiya
 
-Is session mein ye kaam hua:
-
-1. Backend ka complete audit aur 8 bugs fix
-2. Admin panel ke hardcoded localhost URLs fix
+1. Backend ka complete audit — 8 bugs fix
+2. Admin panel ke hardcoded `localhost:5000` URLs fix
 3. Public site ke saare forms real API se connect
-4. 3 naye pages (Downloads, News & Events, Gallery) live data ke saath
-5. Production CORS, cookie, aur deployment issues fix
+4. 3 naye live-data pages: Downloads, News & Events, Gallery
+5. Production CORS, cookie (`sameSite`), aur deployment issues fix
 6. `NEXT_PUBLIC_` prefix poori codebase se remove
-7. Both repos GitHub par push
+7. **Production login bug fix** — double-hashed password issue resolve (seed.js)
+8. Both repos GitHub par push
 
 ---
 
-## PART 1 — Backend Audit & Fixes
+## PART 1 — Backend Audit & 8 Bugs Fix
 
 **Repo:** `Tilak-Global-School-Backend`  
 **Commit:** `9af2ab5`
 
 ### Bug 1 — `app.js`: ES Module `__dirname` missing
-**Problem:** `path` import tha lekin `__dirname` defined nahi tha — ES modules mein `__dirname` automatically nahi milta. Isse `/uploads` static files serve nahi ho raha tha.  
-**Fix:** `fileURLToPath` + `path.dirname` se `__dirname` banaya.
+
+**Problem:** `__dirname` ES modules mein automatically nahi milta — static `/uploads` serve nahi ho raha tha.  
+**Fix:** `fileURLToPath` + `path.dirname` se define kiya.
 
 ```js
-// Before (broken)
-app.use('/uploads', express.static(UPLOAD_DIR, ...));
-// __dirname was undefined in ES module — ENOTEMPTY error
-
-// After (fixed)
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -45,8 +40,9 @@ const __dirname  = path.dirname(__filename);
 ---
 
 ### Bug 2 — `app.js`: CORS incomplete
-**Problem:** Sirf `CLIENT_URL` env se origins read ho rahi thi. Vercel preview deployments (`*.vercel.app`) block ho rahi thi. `Cookie` aur `Set-Cookie` headers allowed nahi the.  
-**Fix:** Hardcoded explicit origins list + wildcard for Vercel previews + proper headers.
+
+**Problem:** `*.vercel.app` preview deployments block ho rahi thi. `Cookie` aur `Set-Cookie` headers allowed nahi the.  
+**Fix:** Explicit origins list + Vercel wildcard + headers.
 
 ```js
 const ALLOWED_ORIGINS = [
@@ -56,42 +52,31 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
 ];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    if (origin.endsWith('.vercel.app')) return callback(null, true); // NEW
-    return callback(new Error('CORS blocked'));
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (origin.endsWith('.vercel.app')) return cb(null, true);
+    cb(new Error('CORS blocked'));
   },
   credentials:    true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'], // Cookie added
-  exposedHeaders: ['Set-Cookie'],                               // NEW
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
 }));
 ```
 
 ---
 
 ### Bug 3 — `env.js`: Missing exports + no production validation
-**Problem:** `RENDER_URL` export missing tha. Production mein weak `JWT_SECRET` se server start ho sakta tha.  
-**Fix:** `RENDER_URL` add kiya + fail-fast validation for production.
 
-```js
-export const RENDER_URL = process.env.RENDER_URL || 'https://api.tilakglobalschool.com';
-
-// Production validation — fail fast
-if (isProd) {
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secret_change_in_production') {
-    throw new Error('JWT_SECRET must be set to a strong secret in production.');
-  }
-}
-```
+**Problem:** `RENDER_URL` missing. Weak JWT_SECRET se production start ho sakta tha.  
+**Fix:** Export add kiya + fail-fast validation.
 
 ---
 
-### Bug 4 — `server.js`: Upload subdirectories not created
-**Problem:** Multer `gallery/`, `news/`, `documents/`, `media/` subdirectories expect karta tha ki ye exist kare — Render pe fresh deploy mein ENOENT error aata tha pehle upload par.  
-**Fix:** Server start pe sab directories auto-create.
+### Bug 4 — `server.js`: Upload subdirectories missing
+
+**Problem:** Render pe fresh deploy mein pehle upload par `ENOENT` error.  
+**Fix:** Server start pe auto-create.
 
 ```js
 const UPLOAD_SUBDIRS = ['gallery', 'news', 'documents', 'media'];
@@ -101,249 +86,261 @@ for (const dir of UPLOAD_SUBDIRS) {
 }
 ```
 
-**Saath mein:** Graceful shutdown (SIGTERM/SIGINT) aur keep-alive ping (Render free tier ke liye).
+Saath mein: graceful SIGTERM/SIGINT shutdown + keep-alive ping (Render free tier).
 
 ---
 
-### Bug 5 — `jwt.js`: Cookie cross-origin mein kaam nahi kar raha tha
-**Problem:** `sameSite: 'strict'` set tha — lekin Vercel frontend aur Render backend alag domains pe hain. Cross-origin requests mein strict cookies browser silently drop kar deta hai. `clearTokenCookie` empty cookie set kar raha tha instead of `res.clearCookie()`.  
-**Fix:** Production mein `sameSite: 'none'` + `secure: true` (dono saath chahiye). Dev mein `sameSite: 'lax'`. `name` field bhi payload mein add kiya (activityLogger ko chahiye tha).
+### Bug 5 — `jwt.js`: Cross-origin cookie kaam nahi kar raha
+
+**Problem:** `sameSite: 'strict'` — Vercel → Render cross-origin mein browser cookie drop kar deta hai. `clearTokenCookie` empty value set karta tha instead of `res.clearCookie()`.  
+**Fix:**
 
 ```js
-// Before (broken for cross-origin)
-sameSite: 'strict'
+sameSite: isProd ? 'none' : 'lax',  // 'none' requires secure:true
+secure:   isProd,
+// clearCookie bhi fix kiya
+res.clearCookie(COOKIE_NAME, getCookieOptions());
+```
+
+---
+
+### Bug 6 — `auth.controller.js`: `name` missing from JWT payload
+
+**Problem:** Activity log mein `adminName` blank aa raha tha.  
+**Fix:** `buildPayload()` mein `name` add kiya.
+
+---
+
+### Bug 7 — `settings.controller.js`: Wrong file deletion path
+
+**Problem:** Old media file delete karte waqt path galat ban raha tha.  
+**Fix:**
+
+```js
+// Before (wrong)
+path.join(UPLOAD_DIR, '..', oldUrl)
 
 // After (correct)
-sameSite: isProd ? 'none' : 'lax',
-secure:   isProd,   // 'none' requires secure:true — browser rejects otherwise
-
-// Also fixed clearCookie
-res.clearCookie(COOKIE_NAME, getCookieOptions()); // was: res.cookie(..., maxAge: 0)
-```
-
----
-
-### Bug 6 — `auth.controller.js`: `logActivity` mein `name` missing
-**Problem:** JWT payload mein `name` field nahi tha. `logActivity({ admin: req.admin })` call karte waqt `adminName` blank aa raha tha activity log mein.  
-**Fix:** `buildPayload()` mein `name` add kiya. Auth controller mein explicit `{ id, email, name }` pass kiya.
-
----
-
-### Bug 7 — `settings.controller.js`: Wrong file path for old image deletion
-**Problem:** Purani logo/favicon/director photo delete karte waqt path galat bana raha tha:
-```js
-// Before (wrong — path with double /uploads/)
-path.join(UPLOAD_DIR, '..', oldUrl)  // UPLOAD_DIR = /app/uploads, oldUrl = /uploads/media/x.jpg
-// Result: /app/uploads/../uploads/media/x.jpg = /app/uploads/media/x.jpg (accidentally works)
-// But on Render: /app/uploads/../uploads = /app/uploads which is correct by luck only
-```
-**Fix:** Clean path calculation:
-```js
 const relativeFile = oldUrl.replace(/^\/uploads\//, '');
 const absPath = path.join(UPLOAD_DIR, relativeFile);
 ```
 
 ---
 
-### Bug 8 — `seed.js`: Wrong email domain + missing counter + deprecation warning
-**Problems:**
-- Default email `admin@tilakglobalschool.in` — production uses `.com`
-- `applicationId` counter document never seeded — first application would fail
-- Mongoose `new: true` deprecated (should be `returnDocument: 'after'`)
+### Bug 8 — `seed.js`: Email domain + missing counter + deprecation
 
-**Fix:** All three corrected.
+**Problems:** `.in` instead of `.com`, counter document missing, Mongoose deprecation.  
+**Fix:** Sab theek kiya.
 
 ---
 
-## PART 2 — Admin Panel: Hardcoded localhost URLs Removed
+## PART 2 — Admin Panel: `localhost:5000` URLs Fix
 
 **Repo:** `Tilak-Global-School-Frontend`  
 **Commit:** `a9f7766`
+
+`gallery/page.jsx`, `documents/page.jsx`, `settings/page.jsx` mein hardcoded `localhost:5000` tha.
+
+```js
+// Before
+const IMG_BASE = 'http://localhost:5000';
+
+// After — environment-aware
+function getFileBase() {
+  if (typeof window !== 'undefined') return ''; // browser: Vercel proxy
+  return process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com';
+}
+```
+
+Settings mein logo, favicon, director photo teeno image tags fix kiye.
+
+---
+
+## PART 3 — Public Site: Forms Real API Se Connect
+
+**Commit:** `a9f7766`
+
+### AdmissionEnquiryForm.jsx
+
+**Before:** Demo message — koi data save nahi hota tha.  
+**After:** `POST /api/applications` — applicationId return hota hai.
+
+- Indian phone validation: `/^(\+91)?[6-9]\d{9}$/`
+- 429 → "Too many submissions" message
+- Loading spinner + success state with App ID
+
+### OnlineAdmissionForm.jsx
+
+**Before:** Frontend-only 4-step demo.  
+**After:** Real API submission with all fields (name, DOB, gender, class, parent, phone, email, address, previous school).
+
+### contact-us/page.jsx
+
+**Before:** Sirf heading tha.  
+**After:** Poora contact page:
+
+- Contact info cards (address, phone, email, timings)
+- WhatsApp button
+- Full form → `POST /api/contact`
+- Validation + toast notifications
+
+---
+
+## PART 4 — Public Site: 3 New Live-Data Pages
+
+**Commit:** `cf8a780`
+
+### downloads/page.jsx
+
+- `GET /api/documents` → category-wise groups
+- File type badge, size, date
+- Download + external link
+
+### news-events/page.jsx + `[slug]/page.jsx`
+
+- `GET /api/news` → card grid
+- Individual post page: `GET /api/news/:slug`
+- `generateMetadata()` for SEO
 
 ### gallery/page.jsx
 
-```js
-// Before (broken in production)
-const IMG_BASE = 'http://localhost:5000';
-<img src={`${IMG_BASE}${img.imageUrl}`} />
+- `GET /api/gallery` with category filter
+- URL-based filter tabs (server-side, no useState)
+- Masonry layout + hover caption
 
-// After (environment-aware)
-function getFileBase() {
-  if (typeof window !== 'undefined') return ''; // browser: Vercel proxy handles it
-  return process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com';
-}
-<img src={`${getFileBase()}${img.imageUrl}`} />
-```
+### FeeStructureSection.jsx
 
-### documents/page.jsx
+- Async server component — `GET /api/fees`
+- Live amounts formatted as `₹ XX,XXX`
+- Falls back to static data if not seeded yet
 
-Same fix — `DOC_BASE = 'http://localhost:5000'` replaced with `getFileBase()`.
+### AdmissionsFaqWrapper.jsx + AdmissionsFaqSection.jsx
 
-### settings/page.jsx
+- Server wrapper fetches `GET /api/faqs`
+- Passes to client accordion component
+- Static fallback if API empty
 
-```js
-// Added helper
-function fileUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  const base = typeof window !== 'undefined' ? '' : '...';
-  return `${base}${path}`;
-}
+### ToasterProvider.jsx + (user)/layout.jsx
 
-// Fixed all 3 image tags
-<img src={fileUrl(form.logoUrl)} />
-<img src={fileUrl(form.faviconUrl)} />
-<img src={fileUrl(form.directorPhotoUrl)} />
-```
+- Global toast notifications for all public pages
+- No duplicate `<Toaster>` needed per page
 
 ---
 
-## PART 3 — Public Site: Forms Wired to Real API
-
-**Repo:** `Tilak-Global-School-Frontend`  
-**Commit:** `a9f7766`
-
-### AdmissionEnquiryForm.jsx (Quick 3-field form)
-
-**Before:** Frontend-only — showed static demo message, no data saved anywhere.  
-**After:** Real `POST /api/applications` call.
-
-- Phone validation: Indian format `/^(\+91)?[6-9]\d{9}$/`
-- Success state: shows applicationId (e.g. `APP-0005`)
-- Error handling: 429 → "Too many submissions", 500 → server message
-- Loading spinner on submit button
-
-### OnlineAdmissionForm.jsx (4-step full application)
-
-**Before:** Frontend-only demo.  
-**After:** Real `POST /api/applications` with all fields.
-
-- All 4 steps validate before submit
-- Submits: studentName, dateOfBirth, gender, classApplying, parentName, phone, email, address, previousSchool, message
-- Success: shows applicationId + student name + parent mobile
-- Error: 429 / server error with toast
-
-### contact-us/page.jsx (Complete rewrite)
-
-**Before:** Static heading + subtext only — no form.  
-**After:** Full contact page with:
-
-- Contact info cards (address, phone, email, office hours from `siteConfig`)
-- WhatsApp enquiry button
-- Full form: name, email, phone, subject, message
-- Validation, loading state, success/error toasts
-- Real `POST /api/contact` submission
-
----
-
-## PART 4 — Public Site: New Pages with Live API Data
-
-**Repo:** `Tilak-Global-School-Frontend`  
-**Commit:** `cf8a780`
-
-### downloads/page.jsx (New — was stub)
-
-- Fetches `GET /api/documents?status=published&limit=100`
-- Groups by category (Disclosure, Notice, Academic, Policy, etc.)
-- Shows file type badge, file size, issue date
-- Download icon + external link to file
-- Graceful fallback if API unavailable
-
-### news-events/page.jsx (New — was stub)
-
-- Fetches `GET /api/news?limit=24&status=published`
-- Card grid with featured image, category badge, date, featured star
-- "Read more" link to individual post
-
-### news-events/[slug]/page.jsx (New route)
-
-- Dynamic route for individual news posts
-- `generateMetadata()` for SEO title/description
-- Fetches `GET /api/news/:slug`
-- Returns 404 if post not found
-
-### gallery/page.jsx (New — was stub)
-
-- Fetches `GET /api/gallery` with server-side category filter
-- Category filter tabs as links (no client state, URL-based)
-- Masonry column layout with hover caption reveal
-- Category badge on each image
-
-### FeeStructureSection.jsx (Updated)
-
-**Before:** Showed only static placeholder data from `data/admissions.js`.  
-**After:** Async server component — fetches `GET /api/fees`.
-
-- Live fee amounts formatted as `₹ XX,XXX`
-- Falls back to static placeholders if no data seeded yet
-- Notes field shown below charges
-
-### AdmissionsFaqSection.jsx + AdmissionsFaqWrapper.jsx (Updated)
-
-- New server wrapper `AdmissionsFaqWrapper.jsx` fetches `GET /api/faqs`
-- Passes data to existing client accordion component via prop
-- Falls back to static FAQ data if API empty
-- Admissions page now uses wrapper instead of direct client component
-
-### ToasterProvider.jsx + (user)/layout.jsx (New)
-
-- `ToasterProvider` — client wrapper for `react-hot-toast` `<Toaster>`
-- Added to user layout so all public pages get toast notifications
-- Forms no longer need their own `<Toaster>` instance
-
----
-
-## PART 5 — API URL Strategy (No NEXT_PUBLIC_)
+## PART 5 — API URL Strategy (`NEXT_PUBLIC_` Remove)
 
 **Commits:** `1c8e6f2`, `8b0c2c3`
 
-### Secure URL Strategy
-
 ```
-Server-side (Server Components, generateMetadata):
-  → process.env.API_URL (private, full backend URL)
-  → Set in Vercel dashboard: API_URL = https://api.tilakglobalschool.com/api
-  → Never reaches browser bundle
-
-Client-side ("use client" components, browser):
-  → '/api' (relative URL)
-  → Vercel rewrites /api/* → https://api.tilakglobalschool.com/api/*
-  → No env variable needed in browser
+Server-side → process.env.API_URL  (private, never in browser bundle)
+Client-side → '/api'               (relative, Vercel rewrite proxies to backend)
 ```
 
-**Files created in both apps:**
-- `src/lib/apiUrl.js` — `getApiBase()` function
-- Inline `fetchWithRetry` in `api.js` and `adminApi.js`
+`src/lib/apiUrl.js` dono apps mein:
 
-### vercel.json (Both apps)
+```js
+export function getApiBase() {
+  if (typeof window !== 'undefined') return '/api';
+  return process.env.API_URL || 'https://api.tilakglobalschool.com/api';
+}
+```
+
+`vercel.json` dono apps mein:
 
 ```json
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://api.tilakglobalschool.com/api/$1" }
-  ]
-}
+{ "rewrites": [{ "source": "/api/(.*)", "destination": "https://api.tilakglobalschool.com/api/$1" }] }
 ```
 
 ---
 
-## Current Production Setup
+## PART 6 — Production Login Bug Fix (Double-Hashed Password)
 
-### Vercel Environment Variables to Set
+**Repo:** `Tilak-Global-School-Backend`  
+**Commit:** `9e89c91`
 
-| Project | Variable | Value |
-|---|---|---|
-| Public site | `API_URL` | `https://api.tilakglobalschool.com/api` |
-| Admin panel | `API_URL` | `https://api.tilakglobalschool.com/api` |
+### Problem
 
-### Render Environment Variables to Set
+```
+Production mein:
+  Seed: "Admin user already exists" → skip → purana hash raha
+  Login: 401 Unauthorized
+
+Root cause:
+  Purana code mein AdminUser model ka pre-save hook
+  bcrypt.hash() dobara karta tha:
+    seed → hash('ChangeMe123!') → "$2b$12$ABC"
+    pre-save → hash("$2b$12$ABC") → "$2b$12$XYZ"  ← double hashed!
+    login → compare('ChangeMe123!', "$2b$12$XYZ") → ❌ FAIL
+```
+
+### Fix
+
+Seed ab **hamesha** password reset karta hai `findByIdAndUpdate + $set` se — koi bhi pre-save hook nahi chalta:
+
+```js
+// New seed logic — existing user ho ya naya, ALWAYS reset hash
+const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+const existing = await AdminUser.findOne({ email: ADMIN_EMAIL });
+
+if (existing) {
+  // $set bypasses ALL pre-save hooks — guaranteed correct hash
+  await AdminUser.findByIdAndUpdate(
+    existing._id,
+    { $set: { passwordHash, name, role, permissions, isActive: true } },
+    { runValidators: false }
+  );
+  console.log(`✅ Admin user password reset: ${ADMIN_EMAIL}`);
+  return;
+}
+// else: create fresh
+```
+
+### Render Par Steps
+
+1. Push ke baad Render auto-deploy hoga
+2. Render Shell mein: `npm run seed`
+3. Output: `✅ Admin user password reset: admin@tilakglobalschool.com`
+4. Login test: `POST /api/auth/login` → 200 ✅
+
+---
+
+## Commit History
+
+### Backend (`Tilak-Global-School-Backend`)
+
+| Commit | Description |
+|---|---|
+| `9e89c91` | fix: seed always resets admin password (double-hash fix) |
+| `9af2ab5` | fix: complete backend audit — all 8 bugs resolved |
+| `2ac1d53` | fix: production deployment — CORS, sameSite, uploads, keep-alive |
+
+### Frontend (`Tilak-Global-School-Frontend`)
+
+| Commit | Description |
+|---|---|
+| `bf0c6d7` | docs: add UPDATES.md |
+| `cf8a780` | feat: public site API integration complete |
+| `a9f7766` | fix: admin localhost URLs + public forms wired to API |
+| `8b0c2c3` | fix: production deployment — CORS, cookies, rewrites |
+| `1c8e6f2` | fix: remove NEXT_PUBLIC_ prefix |
+
+---
+
+## Production Environment Variables
+
+### Vercel (both projects)
+
+| Variable | Value |
+|---|---|
+| `API_URL` | `https://api.tilakglobalschool.com/api` |
+
+### Render (backend)
 
 | Variable | Value |
 |---|---|
 | `NODE_ENV` | `production` |
-| `PORT` | `5000` |
 | `MONGO_URI` | `mongodb+srv://...` (Atlas) |
-| `JWT_SECRET` | (strong random string — min 32 chars) |
+| `JWT_SECRET` | (strong 32+ char string) |
 | `JWT_EXPIRES_IN` | `7d` |
 | `CLIENT_URL` | `https://tilakglobalschool.com,https://admin-portal.tilakglobalschool.com` |
 | `COOKIE_DOMAIN` | `.tilakglobalschool.com` |
@@ -351,104 +348,56 @@ Client-side ("use client" components, browser):
 | `UPLOAD_DIR` | `uploads` |
 | `MAX_FILE_SIZE_MB` | `10` |
 | `ADMIN_EMAIL` | `admin@tilakglobalschool.com` |
-| `ADMIN_PASSWORD` | (strong password — change after first login) |
+| `ADMIN_PASSWORD` | (strong password) |
 
 ---
 
-## Admin Panel Login
+## Admin Login Credentials
 
 | Field | Value |
 |---|---|
 | URL | `https://admin-portal.tilakglobalschool.com/login` |
 | Email | `admin@tilakglobalschool.com` |
-| Password | `ChangeMe123!` ← **change after first login** |
+| Password | `ChangeMe123!` |
+
+> ⚠️ **Pehle login ke baad password zaroor change karo.**
 
 ---
 
-## What Is Working Now
+## Changed Files Summary
 
-### Backend ✅
-- Server starts, MongoDB connects, uploads dirs auto-created
-- `GET /api/health` returns `{ success, db, env, uptime, timestamp }`
-- `POST /api/auth/login` sets JWT httpOnly cookie (cross-origin ready)
-- All 13 admin routes protected by JWT auth
-- All 10 public read routes working
-- Rate limiting on all `/api` routes
-- File uploads (gallery, documents, settings media) work
+### Backend (10 files)
 
-### Admin Panel ✅
-- Login, logout, session persistence
-- Dashboard: stats, trend chart, class chart, activity log
-- Admissions: full table, search, filters, status update, detail view, delete
-- Gallery: upload photos, edit, delete
-- News: create/edit/delete, publish/unpublish, set featured
-- Documents: upload files, manage, delete
-- Fees: edit fee amounts per class group
-- FAQs: create/edit/delete/reorder
-- Content (CMS): edit/draft/publish content blocks
-- Settings: all school info, logo/favicon/director photo upload
-- Users: create/edit/permissions/reset password/deactivate
-- Contact: view enquiries, mark read/replied, delete
-- All image/file URLs environment-aware (no localhost hardcoding)
-
-### Public Site ✅
-- Home page (static data, all sections)
-- About, Academics (static data)
-- Admissions: fee table from API, FAQs from API, forms POST to API
-- Gallery: live photos from API with category filter
-- News & Events: live posts + individual post pages
-- Downloads: live documents grouped by category
-- Contact: full form POSTs to `/api/contact`
-- `/admin` returns hard 404 (admin is on separate subdomain)
-
-### What Is NOT Yet Done ❌
-
-| Item | Notes |
+| File | Change |
 |---|---|
-| Home page live API data | Hero, director message, stats still from `data/home.js` static file |
-| About page live data | Still uses `data/about.js` static file |
-| Academics page live data | Still uses `data/academics.js` static file |
-| Email notifications | Out of scope (Phase 2) |
-| CSV export for applications | Not implemented |
-| Sitemap / robots.txt | Not done |
-| Production deployment | Pending domain + VPS setup |
-| Admin change-password UI | API exists, no UI page yet |
-
----
-
-## File Changes This Session (Summary)
-
-### Backend (9 files)
-```
-src/app.js                    CORS + __dirname fix
-src/config/env.js             RENDER_URL + prod validation
-src/server.js                 Upload dirs + graceful shutdown + keep-alive
-src/utils/jwt.js              sameSite:none + clearCookie fix + name in payload
-src/middleware/auth.middleware.js  Bearer header fallback + JSON errors
-src/controllers/auth.controller.js  Pass name to logActivity
-src/controllers/settings.controller.js  Fix file deletion path
-src/utils/activityLogger.js   Support _id + id both
-src/seed/seed.js              .com email + seedCounter + returnDocument fix
-```
+| `src/app.js` | `__dirname` fix, CORS explicit origins + Vercel wildcard |
+| `src/config/env.js` | `RENDER_URL` export, prod validation |
+| `src/server.js` | Upload dirs auto-create, graceful shutdown, keep-alive |
+| `src/utils/jwt.js` | `sameSite:none`, `clearCookie()` fix, `name` in payload |
+| `src/middleware/auth.middleware.js` | Bearer header fallback, always JSON response |
+| `src/controllers/auth.controller.js` | Pass `name` to `logActivity` |
+| `src/controllers/settings.controller.js` | Fix file deletion path |
+| `src/utils/activityLogger.js` | Support both `id` and `_id` |
+| `src/seed/seed.js` | Double-hash fix: always reset via `$set`, `.com` email, counter |
+| `.env.example` | Updated with all new vars |
 
 ### Frontend / Admin (17 files)
-```
-admin/src/app/gallery/page.jsx         getFileBase() replaces localhost
-admin/src/app/documents/page.jsx       getFileBase() replaces localhost
-admin/src/app/settings/page.jsx        fileUrl() helper for all 3 image tags
 
-frontend/src/app/(user)/contact-us/page.jsx         Full form + API
-frontend/src/app/(user)/downloads/page.jsx           Live API data
-frontend/src/app/(user)/gallery/page.jsx             Live API data + category filter
-frontend/src/app/(user)/news-events/page.jsx         Live API data
-frontend/src/app/(user)/news-events/[slug]/page.jsx  NEW — individual post page
-frontend/src/app/(user)/admissions/page.jsx          Uses AdmissionsFaqWrapper
-frontend/src/app/(user)/layout.jsx                   Global ToasterProvider
-
-frontend/src/components/admissions/AdmissionEnquiryForm.jsx   Real API
-frontend/src/components/admissions/OnlineAdmissionForm.jsx    Real API
-frontend/src/components/admissions/FeeStructureSection.jsx    Async + API
-frontend/src/components/admissions/AdmissionsFaqSection.jsx   Accepts apiFaqs prop
-frontend/src/components/admissions/AdmissionsFaqWrapper.jsx   NEW — server wrapper
-frontend/src/components/ToasterProvider.jsx                   NEW — client wrapper
-```
+| File | Change |
+|---|---|
+| `admin/src/app/gallery/page.jsx` | `getFileBase()` replaces `localhost:5000` |
+| `admin/src/app/documents/page.jsx` | `getFileBase()` replaces `localhost:5000` |
+| `admin/src/app/settings/page.jsx` | `fileUrl()` helper for 3 image tags |
+| `frontend/src/app/(user)/contact-us/page.jsx` | Full form, real API |
+| `frontend/src/app/(user)/downloads/page.jsx` | Live API data, category groups |
+| `frontend/src/app/(user)/gallery/page.jsx` | Live API, category filter, masonry |
+| `frontend/src/app/(user)/news-events/page.jsx` | Live API card grid |
+| `frontend/src/app/(user)/news-events/[slug]/page.jsx` | **NEW** — individual post |
+| `frontend/src/app/(user)/admissions/page.jsx` | Uses `AdmissionsFaqWrapper` |
+| `frontend/src/app/(user)/layout.jsx` | Global `ToasterProvider` |
+| `frontend/src/components/admissions/AdmissionEnquiryForm.jsx` | Real `POST /api/applications` |
+| `frontend/src/components/admissions/OnlineAdmissionForm.jsx` | Real `POST /api/applications` |
+| `frontend/src/components/admissions/FeeStructureSection.jsx` | Async server component |
+| `frontend/src/components/admissions/AdmissionsFaqSection.jsx` | Accepts `apiFaqs` prop |
+| `frontend/src/components/admissions/AdmissionsFaqWrapper.jsx` | **NEW** — server wrapper |
+| `frontend/src/components/ToasterProvider.jsx` | **NEW** — client toast wrapper |
