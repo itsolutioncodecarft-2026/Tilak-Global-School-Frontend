@@ -11,7 +11,12 @@ import { LoadingPage } from '@/app/components/Spinner';
 import { Upload, Trash2, Pencil } from 'lucide-react';
 
 const CATEGORIES = ['Campus','Classrooms','Sports','Events','Activities'];
-const IMG_BASE = 'http://localhost:5000'; // direct URL for serving uploaded images
+
+// Build base URL for image src — environment-aware
+function getFileBase() {
+  if (typeof window !== 'undefined') return ''; // browser: served via Vercel rewrite → relative path works
+  return process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com';
+}
 
 export default function GalleryPage() {
   const [images,  setImages]  = useState([]);
@@ -111,7 +116,7 @@ export default function GalleryPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {images.map(img => (
             <div key={img._id} className="relative group rounded-xl overflow-hidden border border-line dark:border-gray-700 shadow-sm">
-              <img src={`${IMG_BASE}${img.imageUrl}`} alt={img.caption}
+              <img src={`${getFileBase()}${img.imageUrl}`} alt={img.caption}
                 className="w-full aspect-video object-cover bg-sky dark:bg-gray-800" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                 <button onClick={() => openEdit(img)} className="p-2 rounded-full bg-white/90 text-navy hover:bg-white"><Pencil size={14}/></button>

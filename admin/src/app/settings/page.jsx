@@ -6,6 +6,18 @@ import PageHeader from '@/app/components/PageHeader';
 import { LoadingPage } from '@/app/components/Spinner';
 import { Save, Upload } from 'lucide-react';
 
+// Build URL for uploaded files — works in both browser and server render
+function fileUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path; // already absolute
+  // In browser: Vercel rewrite handles /uploads/* → backend
+  // In SSR: prepend the API origin
+  const base = typeof window !== 'undefined'
+    ? ''
+    : (process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com');
+  return `${base}${path}`;
+}
+
 function Field({ label, name, value, onChange, type = 'text', placeholder, hint }) {
   return (
     <div>
@@ -181,7 +193,7 @@ export default function SettingsPage() {
         {/* Director photo upload */}
         <div className="flex items-center gap-3">
           {form.directorPhotoUrl && (
-            <img src={`http://localhost:5000${form.directorPhotoUrl}`}
+            <img src={fileUrl(form.directorPhotoUrl)}
               alt="Director" className="w-12 h-12 rounded-full object-cover border border-line" />
           )}
           <button onClick={() => handleUpload('director-photo', 'directorPhotoUrl')}
@@ -196,7 +208,7 @@ export default function SettingsPage() {
       <Section title="Media">
         <div className="flex items-center gap-3">
           {form.logoUrl && (
-            <img src={`http://localhost:5000${form.logoUrl}`}
+            <img src={fileUrl(form.logoUrl)}
               alt="Logo" className="h-10 object-contain border border-line rounded" />
           )}
           <button onClick={() => handleUpload('logo', 'logoUrl')}

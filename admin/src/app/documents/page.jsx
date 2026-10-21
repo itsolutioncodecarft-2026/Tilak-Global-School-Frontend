@@ -12,7 +12,12 @@ import { Upload, Trash2, ExternalLink } from 'lucide-react';
 
 const CATEGORIES = ['Disclosure','Notice','Academic','Policy','Certificate','Form','Timetable','Syllabus','Calendar','Results'];
 const PAGES      = ['academics','admissions','news','results','downloads'];
-const DOC_BASE   = 'http://localhost:5000'; // direct URL for serving uploaded files
+
+// Build base URL for file links — uses same env-aware logic as API client
+function getFileBase() {
+  if (typeof window !== 'undefined') return ''; // browser: relative (served via Vercel rewrite)
+  return process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com';
+}
 
 export default function DocumentsPage() {
   const [docs,    setDocs]    = useState([]);
@@ -119,7 +124,7 @@ export default function DocumentsPage() {
                   <td className="px-3 py-2"><Badge variant={d.status}>{d.status}</Badge></td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1">
-                      <a href={`${DOC_BASE}${d.fileUrl}`} target="_blank" rel="noopener noreferrer"
+                      <a href={`${getFileBase()}${d.fileUrl}`} target="_blank" rel="noopener noreferrer"
                         className="p-1 rounded text-muted hover:text-navy"><ExternalLink size={13}/></a>
                       <button onClick={()=>setDeleteId(d._id)} className="p-1 rounded text-muted hover:text-danger"><Trash2 size={13}/></button>
                     </div>
