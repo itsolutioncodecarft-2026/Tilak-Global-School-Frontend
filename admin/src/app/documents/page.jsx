@@ -9,14 +9,10 @@ import ConfirmDialog from '@/app/components/ConfirmDialog';
 import EmptyState    from '@/app/components/EmptyState';
 import { LoadingPage } from '@/app/components/Spinner';
 import { Upload, Trash2, ExternalLink } from 'lucide-react';
+import { getUploadUrl } from '@/lib/uploadUrl';
 
 const CATEGORIES = ['Disclosure','Notice','Academic','Policy','Certificate','Form','Timetable','Syllabus','Calendar','Results'];
 const PAGES      = ['academics','admissions','news','results','downloads'];
-
-function getFileBase() {
-  if (typeof window !== 'undefined') return '';
-  return process.env.API_URL?.replace('/api', '') || 'https://api.tilakglobalschool.com';
-}
 
 // ── DocField is at MODULE SCOPE — React never remounts it on parent re-render ──
 // Previously this was defined as `const F = ...` INSIDE DocumentsPage, which
@@ -140,7 +136,7 @@ export default function DocumentsPage() {
                   <td className="px-3 py-2"><Badge variant={d.status}>{d.status}</Badge></td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1">
-                      <a href={`${getFileBase()}${d.fileUrl}`} target="_blank" rel="noopener noreferrer"
+                      <a href={getUploadUrl(d.fileUrl)} target="_blank" rel="noopener noreferrer"
                         className="p-1 rounded text-muted hover:text-navy"><ExternalLink size={13}/></a>
                       <button onClick={()=>setDeleteId(d._id)} className="p-1 rounded text-muted hover:text-danger"><Trash2 size={13}/></button>
                     </div>
